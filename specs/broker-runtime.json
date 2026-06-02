@@ -1,0 +1,346 @@
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "ToDo App - Broker Runtime Services",
+    "version": "1.0.0",
+    "description": "Runtime/infrastructure API exposed by the broker for service-to-service use. Provides storage provisioning operations consumed by the back-end API."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5200",
+      "description": "Broker (runtime)"
+    }
+  ],
+  "paths": {
+    "/api/provision/user/{userId}": {
+      "post": {
+        "operationId": "provisionUserStorage",
+        "summary": "Provision blob storage for a user",
+        "tags": [
+          "provisioning"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProvisionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Provisioning started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvisionResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/provision/organization/{orgId}": {
+      "post": {
+        "operationId": "provisionOrgStorage",
+        "summary": "Provision blob storage for an organization",
+        "tags": [
+          "provisioning"
+        ],
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProvisionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Provisioning started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvisionResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/provision/organization/{orgId}/member/{userId}": {
+      "post": {
+        "operationId": "provisionOrgMemberStorage",
+        "summary": "Provision blob storage for a user within an organization",
+        "tags": [
+          "provisioning"
+        ],
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProvisionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Provisioning started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvisionResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/provisioning/status/{ticket}": {
+      "get": {
+        "operationId": "getProvisioningStatus",
+        "summary": "Get the status of a provisioning operation",
+        "tags": [
+          "provisioning"
+        ],
+        "parameters": [
+          {
+            "name": "ticket",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Provisioning status",
+            "headers": {
+              "Retry-After": {
+                "description": "Suggested number of seconds to wait before polling again. Present when status is 'provisioning'.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvisioningStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown ticket",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri",
+            "description": "A URI reference that identifies the problem type"
+          },
+          "title": {
+            "type": "string",
+            "description": "A short human-readable summary of the problem type"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The HTTP status code"
+          },
+          "detail": {
+            "type": "string",
+            "description": "A human-readable explanation specific to this occurrence"
+          },
+          "instance": {
+            "type": "string",
+            "format": "uri",
+            "description": "A URI reference that identifies the specific occurrence"
+          }
+        },
+        "required": [
+          "type",
+          "status"
+        ]
+      },
+      "ProvisionRequest": {
+        "type": "object",
+        "required": [
+          "callbackUrl",
+          "payload"
+        ],
+        "properties": {
+          "callbackUrl": {
+            "type": "string",
+            "format": "uri-reference",
+            "description": "URL to POST the provisioning notification to when storage is ready"
+          },
+          "payload": {
+            "description": "Opaque data to echo back in the callback. Contains the original creation request so the stateless API can populate the newly provisioned storage. In production this would be encrypted; in this demo it is plaintext JSON."
+          }
+        }
+      },
+      "ProvisionResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "ticket"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "already-provisioned"
+            ]
+          },
+          "ticket": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Provisioning ticket ID for polling status via GET /api/provisioning/status/{ticket}"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "ProvisioningStatus": {
+        "type": "object",
+        "required": [
+          "ticket",
+          "status"
+        ],
+        "properties": {
+          "ticket": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "provisioning",
+              "ready",
+              "failed"
+            ]
+          },
+          "retryAfterSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Suggested polling interval in seconds. Present when status is 'provisioning'."
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable status message or failure reason"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}

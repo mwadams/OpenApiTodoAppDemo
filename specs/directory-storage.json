@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://todo-app.example.com/schemas/directory-storage.json",
+  "title": "Directory",
+  "description": "The root directory document stored as a blob. Contains all users, organizations, and their membership associations.",
+  "type": "object",
+  "required": ["users", "organizations", "memberships"],
+  "properties": {
+    "users": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DirectoryUser"
+      }
+    },
+    "organizations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DirectoryOrganization"
+      }
+    },
+    "memberships": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DirectoryMembership"
+      }
+    }
+  },
+  "$defs": {
+    "DirectoryUser": {
+      "title": "DirectoryUser",
+      "description": "A user entry in the directory blob.",
+      "type": "object",
+      "required": ["id", "displayName"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The identity subject (sub) for the user"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        }
+      }
+    },
+    "DirectoryOrganization": {
+      "title": "DirectoryOrganization",
+      "description": "An organization entry in the directory blob.",
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Unique identifier for the organization"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        }
+      }
+    },
+    "DirectoryMembership": {
+      "title": "DirectoryMembership",
+      "description": "A membership association between a user and an organization.",
+      "type": "object",
+      "required": ["userId", "orgId", "role"],
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The user's identity subject (sub)"
+        },
+        "orgId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "The organization's unique identifier"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["member", "admin"],
+          "default": "member"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToDo App</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✓</text></svg>">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="hidden">
+        <header>
+            <h1>✓ ToDo App</h1>
+            <p class="subtitle">Spec-first • Corvus.Json • Azure Blob Storage</p>
+        </header>
+        <main class="login-main">
+            <section class="login-panel">
+                <div class="login-tabs">
+                    <button class="tab-btn active" data-tab="login">Sign In</button>
+                    <button class="tab-btn" data-tab="register">Register</button>
+                </div>
+
+                <form id="form-login" class="tab-content active" data-tab="login">
+                    <div id="login-error" class="form-error hidden"></div>
+                    <label>
+                        Email
+                        <input type="email" id="login-email" required placeholder="alice@example.com">
+                    </label>
+                    <label>
+                        Password
+                        <input type="password" id="login-password" required placeholder="••••••••">
+                    </label>
+                    <button type="submit" class="btn-primary">Sign In</button>
+                </form>
+
+                <form id="form-register" class="tab-content" data-tab="register">
+                    <div id="register-error" class="form-error hidden"></div>
+                    <label>
+                        Name
+                        <input type="text" id="reg-name" required placeholder="e.g. Alice">
+                    </label>
+                    <label>
+                        Email
+                        <input type="email" id="reg-email" required placeholder="alice@example.com">
+                    </label>
+                    <label>
+                        Password
+                        <input type="password" id="reg-password" required placeholder="Choose a password">
+                    </label>
+                    <button type="submit" class="btn-primary">Create Account</button>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <!-- App Screen (shown after login) -->
+    <div id="app-screen" class="hidden">
+    <header>
+        <h1>✓ ToDo App</h1>
+        <p class="subtitle">Spec-first • Corvus.Json • Azure Blob Storage</p>
+        <div class="header-right">
+            <span id="user-display-name" class="user-name"></span>
+            <button id="btn-logout" class="btn-secondary btn-logout">Sign Out</button>
+        </div>
+    </header>
+
+    <main>
+        <nav class="sidebar">
+            <section class="nav-section">
+                <h2>My Todos</h2>
+                <div id="user-todo-entry" class="entity-list"></div>
+            </section>
+
+            <section class="nav-section">
+                <h2>Organization Todos</h2>
+                <div id="org-list" class="entity-list"></div>
+                <button id="btn-create-org" class="nav-btn">+ New Organization</button>
+                <button id="btn-add-member" class="nav-btn">+ Add Member</button>
+            </section>
+        </nav>
+
+        <section class="content">
+            <div id="welcome" class="panel">
+                <h2>Welcome</h2>
+                <p>Select your personal todos or an organization from the sidebar to get started.</p>
+                <div class="architecture-note">
+                    <h3>How it works</h3>
+                    <ul>
+                        <li><strong>Frontend</strong> → talks to the Request Broker</li>
+                        <li><strong>Broker</strong> → authenticates, injects SAS tokens, proxies to API</li>
+                        <li><strong>API</strong> → stateless, uses SAS tokens for blob access</li>
+                        <li><strong>Storage</strong> → isolated blob per entity (Azurite)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="todo-panel" class="panel hidden">
+                <div class="panel-header">
+                    <h2 id="todo-panel-title">Todos</h2>
+                    <div class="panel-actions">
+                        <button id="btn-show-members" class="btn-secondary btn-sm hidden">👥 Members</button>
+                        <button id="btn-add-todo" class="btn-primary">+ Add Todo</button>
+                    </div>
+                </div>
+                <div id="todo-list" class="todo-list"></div>
+
+                <div id="members-section" class="members-section hidden">
+                    <h3>Organization Members</h3>
+                    <div id="members-list" class="members-list"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Dialogs -->
+    <dialog id="dlg-create-org">
+        <form method="dialog">
+            <h3>Create Organization</h3>
+            <label>
+                Name
+                <input type="text" id="input-org-name" required placeholder="e.g. Acme Corp">
+            </label>
+            <div class="dialog-actions">
+                <button type="button" class="btn-secondary" onclick="this.closest('dialog').close()">Cancel</button>
+                <button type="submit" class="btn-primary" value="submit" id="btn-submit-org">Create</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="dlg-add-member">
+        <form method="dialog">
+            <h3>Add Member to Organization</h3>
+            <label>
+                Organization
+                <select id="input-member-org" required></select>
+            </label>
+            <label>
+                Email address
+                <input type="email" id="input-member-email" required
+                       placeholder="e.g. bob@example.com">
+            </label>
+            <label>
+                Role
+                <select id="input-member-role">
+                    <option value="member">Member</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </label>
+            <div class="dialog-actions">
+                <button type="button" class="btn-secondary" onclick="this.closest('dialog').close()">Cancel</button>
+                <button type="submit" class="btn-primary" value="submit" id="btn-submit-member">Add</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="dlg-add-todo">
+        <form method="dialog">
+            <h3>New Todo</h3>
+            <label>
+                Title
+                <input type="text" id="input-todo-title" required placeholder="What needs to be done?">
+            </label>
+            <label>
+                Description
+                <textarea id="input-todo-desc" placeholder="Optional details..."></textarea>
+            </label>
+            <label>
+                Priority
+                <select id="input-todo-priority">
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                    <option value="high">High</option>
+                    <option value="critical">Critical</option>
+                </select>
+            </label>
+            <label>
+                Tags (comma separated)
+                <input type="text" id="input-todo-tags" placeholder="e.g. urgent, bug">
+            </label>
+            <div class="dialog-actions">
+                <button type="button" class="btn-secondary" onclick="this.closest('dialog').close()">Cancel</button>
+                <button type="submit" class="btn-primary" value="submit">Add Todo</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="dlg-edit-todo">
+        <form method="dialog">
+            <h3>Edit Todo</h3>
+            <input type="hidden" id="edit-todo-id">
+            <label>
+                Title
+                <input type="text" id="edit-todo-title" required>
+            </label>
+            <label>
+                Description
+                <textarea id="edit-todo-desc"></textarea>
+            </label>
+            <label>
+                Status
+                <select id="edit-todo-status">
+                    <option value="pending">Pending</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="done">Done</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </label>
+            <label>
+                Priority
+                <select id="edit-todo-priority">
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                    <option value="high">High</option>
+                    <option value="critical">Critical</option>
+                </select>
+            </label>
+            <label>
+                Tags (comma separated)
+                <input type="text" id="edit-todo-tags">
+            </label>
+            <div class="dialog-actions">
+                <button type="button" class="btn-secondary" onclick="this.closest('dialog').close()">Cancel</button>
+                <button type="submit" class="btn-primary" value="submit">Save</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="dlg-confirm" class="confirm-dialog">
+        <div class="confirm-content">
+            <p id="confirm-message"></p>
+            <div class="dialog-actions">
+                <button type="button" class="btn-secondary" id="confirm-cancel">Cancel</button>
+                <button type="button" class="btn-danger" id="confirm-ok">Confirm</button>
+            </div>
+        </div>
+    </dialog>
+
+    <div id="toast" class="toast hidden"></div>
+    </div><!-- /app-screen -->
+
+    <script src="/js/app.js"></script>
+    <script>
+    // Tab switching for login/register
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelector(`.tab-content[data-tab="${btn.dataset.tab}"]`).classList.add('active');
+        });
+    });
+    </script>
+</body>
+</html>

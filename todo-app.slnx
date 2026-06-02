@@ -3,6 +3,8 @@
     <Project Path="src/TodoApp.Api/TodoApp.Api.csproj" />
     <Project Path="src/TodoApp.AppHost/TodoApp.AppHost.csproj" />
     <Project Path="src/TodoApp.Broker/TodoApp.Broker.csproj" />
+    <Project Path="src/TodoApp.Identity/TodoApp.Identity.csproj" />
+    <Project Path="src/TodoApp.WebApp/TodoApp.WebApp.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/TodoApp.IntegrationTests/TodoApp.IntegrationTests.csproj" />

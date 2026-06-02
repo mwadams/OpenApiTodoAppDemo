@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Aspire.AppHost.Sdk/13.3.5">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -6,17 +6,22 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
-    <IsAspireHost>true</IsAspireHost>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting" Version="9.*" />
-    <PackageReference Include="Aspire.Hosting.Azure.Storage" Version="9.*" />
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="13.3.5" />
+    <PackageReference Include="Aspire.Hosting.Azure.Storage" Version="13.3.5" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\TodoApp.Api\TodoApp.Api.csproj" />
     <ProjectReference Include="..\TodoApp.Broker\TodoApp.Broker.csproj" />
+    <ProjectReference Include="..\TodoApp.Identity\TodoApp.Identity.csproj" />
+    <ProjectReference Include="..\TodoApp.WebApp\TodoApp.WebApp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="TodoApp.IntegrationTests" />
   </ItemGroup>
 
 </Project>

@@ -6,13 +6,20 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
+    <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Corvus.Text.Json" Version="5.*" />
-    <PackageReference Include="Corvus.Text.Json.OpenApi" Version="5.*" />
-    <PackageReference Include="Corvus.Text.Json.OpenApi.HttpTransport" Version="5.*" />
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.*" />
+    <PackageReference Include="Aspire.Azure.Storage.Blobs" Version="9.*" />
+    <PackageReference Include="Corvus.Text.Json" Version="5.1.4" />
+    <PackageReference Include="Corvus.Text.Json.OpenApi" Version="5.1.4" />
+    <PackageReference Include="Corvus.Text.Json.OpenApi.HttpTransport" Version="5.1.4" />
+    <PackageReference Include="Corvus.Text.Json.SourceGenerator" Version="5.1.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="Schemas\**\*.json" />
   </ItemGroup>
 
 </Project>

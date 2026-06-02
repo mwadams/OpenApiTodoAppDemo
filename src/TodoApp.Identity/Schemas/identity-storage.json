@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://todo-app.example.com/schemas/identity-storage.json",
+  "title": "AccountDirectory",
+  "description": "The root identity store document. Contains all registered user accounts.",
+  "type": "object",
+  "required": ["accounts"],
+  "properties": {
+    "accounts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Account"
+      }
+    }
+  },
+  "$defs": {
+    "Account": {
+      "title": "Account",
+      "description": "A registered user account.",
+      "type": "object",
+      "required": ["sub", "email", "displayName", "passwordHash"],
+      "properties": {
+        "sub": {
+          "type": "string",
+          "description": "The unique subject identifier for the account."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The user's display name."
+        },
+        "passwordHash": {
+          "type": "string",
+          "description": "The SHA-256 hash of the user's password (base64-encoded)."
+        }
+      }
+    }
+  }
+}

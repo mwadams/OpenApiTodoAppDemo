@@ -1,0 +1,678 @@
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Directory API",
+    "version": "1.0.0",
+    "description": "Manages the user and organization directory. The directory blob stores users, organizations, and memberships and is accessed via SAS tokens provided in request headers."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5100"
+    }
+  ],
+  "paths": {
+    "/users": {
+      "post": {
+        "operationId": "createUser",
+        "summary": "Create a new user and provision their storage",
+        "tags": [
+          "users"
+        ],
+        "parameters": [
+          {
+            "name": "X-Storage-Sas-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "SAS token for accessing the directory blob"
+          },
+          {
+            "name": "X-Identity-Subject",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "JWT subject (sub) for the authenticated identity. For the browser sign-up flow this is GUID-shaped and becomes the Todo-domain user ID."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewUser"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "User creation accepted, storage provisioning in progress",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Existing user returned for an idempotent authenticated create request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid authenticated user identifier",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Concurrency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sasToken": [],
+            "identitySubject": []
+          }
+        ]
+      }
+    },
+    "/me": {
+      "get": {
+        "operationId": "getCurrentUserProfile",
+        "summary": "Get the current user's profile and memberships",
+        "tags": [
+          "users"
+        ],
+        "parameters": [
+          {
+            "name": "X-Storage-Sas-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "SAS token for accessing the directory blob"
+          },
+          {
+            "name": "X-Identity-Subject",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "JWT subject (sub) for the authenticated identity"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current user profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfile"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sasToken": [],
+            "identitySubject": []
+          }
+        ]
+      }
+    },
+    "/me/organizations": {
+      "get": {
+        "operationId": "listCurrentUserOrganizations",
+        "summary": "Get the current user's organization memberships",
+        "tags": [
+          "users"
+        ],
+        "parameters": [
+          {
+            "name": "X-Storage-Sas-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "SAS token for accessing the directory blob"
+          },
+          {
+            "name": "X-Identity-Subject",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "JWT subject (sub) for the authenticated identity"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current user organization memberships",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationMembershipList"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sasToken": [],
+            "identitySubject": []
+          }
+        ]
+      }
+    },
+    "/organizations": {
+      "post": {
+        "operationId": "createOrganization",
+        "summary": "Create a new organization and provision its storage",
+        "tags": [
+          "organizations"
+        ],
+        "parameters": [
+          {
+            "name": "X-Storage-Sas-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "SAS token for accessing the directory blob"
+          },
+          {
+            "name": "X-Identity-Subject",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "JWT subject (sub) for the authenticated identity"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewOrganization"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Organization creation accepted, storage provisioning in progress",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Organization"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Concurrency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sasToken": [],
+            "identitySubject": []
+          }
+        ]
+      }
+    },
+    "/organizations/{orgId}/members": {
+      "post": {
+        "operationId": "addOrganizationMember",
+        "summary": "Associate a user with an organization",
+        "tags": [
+          "organizations"
+        ],
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Storage-Sas-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "SAS token for accessing the directory blob"
+          },
+          {
+            "name": "X-Identity-Subject",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "JWT subject (sub) for the authenticated identity"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddMemberRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Member added successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationMember"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organization or user not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Concurrency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sasToken": [],
+            "identitySubject": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "User": {
+        "description": "User creation response including provisioning status.",
+        "type": "object",
+        "required": [
+          "id",
+          "displayName",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "provisioning",
+              "active",
+              "disabled"
+            ]
+          },
+          "provisioningTicket": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Ticket ID for polling provisioning status. Present only on creation responses."
+          }
+        }
+      },
+      "NewUser": {
+        "type": "object",
+        "required": [
+          "displayName"
+        ],
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Human-readable display name for the user"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Optional email address for the user"
+          }
+        }
+      },
+      "UserProfile": {
+        "description": "Full user profile including organization memberships.",
+        "type": "object",
+        "required": [
+          "id",
+          "displayName",
+          "organizations"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The identity subject (sub) for the user"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "organizations": {
+            "$ref": "#/components/schemas/OrganizationMembershipList"
+          }
+        }
+      },
+      "Organization": {
+        "description": "Organization creation response including provisioning status.",
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "provisioning",
+              "active",
+              "disabled"
+            ]
+          },
+          "provisioningTicket": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Ticket ID for polling provisioning status. Present only on creation responses."
+          }
+        }
+      },
+      "NewOrganization": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Display name for the organization"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Optional description of the organization's purpose"
+          }
+        }
+      },
+      "OrganizationMembership": {
+        "type": "object",
+        "required": [
+          "orgId",
+          "orgName",
+          "role"
+        ],
+        "properties": {
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orgName": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "member",
+              "admin"
+            ]
+          },
+          "joinedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "OrganizationMembershipList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/OrganizationMembership"
+        }
+      },
+      "AddMemberRequest": {
+        "type": "object",
+        "required": [
+          "userId"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "member",
+              "admin"
+            ],
+            "default": "member"
+          }
+        }
+      },
+      "OrganizationMember": {
+        "type": "object",
+        "required": [
+          "userId",
+          "orgId",
+          "role"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "member",
+              "admin"
+            ]
+          },
+          "joinedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "provisioningTicket": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Ticket ID for polling provisioning status of the member's org storage."
+          }
+        }
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "required": [
+          "type",
+          "status"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri",
+            "description": "A URI reference that identifies the problem type"
+          },
+          "title": {
+            "type": "string",
+            "description": "A short human-readable summary of the problem type"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The HTTP status code"
+          },
+          "detail": {
+            "type": "string",
+            "description": "A human-readable explanation specific to this occurrence"
+          },
+          "instance": {
+            "type": "string",
+            "format": "uri",
+            "description": "A URI reference that identifies the specific occurrence"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "sasToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Storage-Sas-Token",
+        "description": "SAS token for accessing the directory blob"
+      },
+      "identitySubject": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Identity-Subject",
+        "description": "JWT subject (sub) for the authenticated identity"
+      }
+    }
+  }
+}

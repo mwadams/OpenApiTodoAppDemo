@@ -1,0 +1,1229 @@
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "ToDo App API",
+    "version": "1.0.0",
+    "description": "Back-end API for todo CRUD operations and provisioning callbacks. Expects SAS tokens in headers for storage access."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5100"
+    }
+  ],
+  "paths": {
+    "/users/{userId}/todos": {
+      "get": {
+        "operationId": "listUserTodos",
+        "summary": "List all todos for a user",
+        "tags": [
+          "todos"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Storage-Sas-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "SAS token for accessing the user's blob storage"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of todos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoList"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sasToken": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "createUserTodo",
+        "summary": "Create a new todo on the user's list",
+        "tags": [
+          "todos"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Storage-Sas-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "SAS token for accessing the user's blob storage"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewTodo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Todo created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoItem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Concurrency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sasToken": []
+          }
+        ]
+      }
+    },
+    "/users/{userId}/todos/{todoId}": {
+      "get": {
+        "operationId": "getUserTodo",
+        "summary": "Get a specific todo",
+        "tags": [
+          "todos"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "todoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Storage-Sas-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The todo item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoItem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Todo not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sasToken": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "updateUserTodo",
+        "summary": "Update a todo",
+        "tags": [
+          "todos"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "todoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Storage-Sas-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TodoUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Todo updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoItem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Todo not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict - concurrent modification detected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sasToken": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "deleteUserTodo",
+        "summary": "Delete a todo",
+        "tags": [
+          "todos"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "todoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Storage-Sas-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Todo deleted"
+          },
+          "404": {
+            "description": "Todo not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Concurrency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sasToken": []
+          }
+        ]
+      }
+    },
+    "/organizations/{orgId}/users/{userId}/todos": {
+      "get": {
+        "operationId": "listOrgUserTodos",
+        "summary": "List todos for a user within an organization",
+        "tags": [
+          "todos"
+        ],
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Storage-Sas-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "SAS token for accessing the organization's blob storage"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of todos for this user in this organization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoList"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sasToken": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "createOrgUserTodo",
+        "summary": "Create a todo for a user within an organization",
+        "tags": [
+          "todos"
+        ],
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Storage-Sas-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewTodo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Todo created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoItem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Concurrency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sasToken": []
+          }
+        ]
+      }
+    },
+    "/organizations/{orgId}/users/{userId}/todos/{todoId}": {
+      "get": {
+        "operationId": "getOrgUserTodo",
+        "summary": "Get a specific todo for a user within an organization",
+        "tags": [
+          "todos"
+        ],
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "todoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Storage-Sas-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The todo item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoItem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Todo not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sasToken": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "updateOrgUserTodo",
+        "summary": "Update a todo for a user within an organization",
+        "tags": [
+          "todos"
+        ],
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "todoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Storage-Sas-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TodoUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Todo updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoItem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Todo not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict - concurrent modification detected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sasToken": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "deleteOrgUserTodo",
+        "summary": "Delete a todo for a user within an organization",
+        "tags": [
+          "todos"
+        ],
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "todoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Storage-Sas-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Todo deleted"
+          },
+          "404": {
+            "description": "Todo not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Concurrency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sasToken": []
+          }
+        ]
+      }
+    },
+    "/callbacks/storage-provisioned": {
+      "post": {
+        "operationId": "onStorageProvisioned",
+        "summary": "Callback endpoint for storage provisioning notifications",
+        "tags": [
+          "callbacks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProvisioningNotification"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          },
+          "409": {
+            "description": "Concurrency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "TodoTitle": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      },
+      "TodoDescription": {
+        "type": "string",
+        "maxLength": 2000
+      },
+      "TodoStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "in-progress",
+          "done",
+          "cancelled"
+        ]
+      },
+      "TodoPriority": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high",
+          "critical"
+        ]
+      },
+      "TodoTags": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "TodoItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "status",
+          "priority",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "$ref": "#/components/schemas/TodoTitle"
+          },
+          "description": {
+            "$ref": "#/components/schemas/TodoDescription"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TodoStatus"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/TodoPriority"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "tags": {
+            "$ref": "#/components/schemas/TodoTags"
+          },
+          "assignee": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TodoList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/TodoItem"
+        }
+      },
+      "NewTodo": {
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/TodoTitle"
+          },
+          "description": {
+            "$ref": "#/components/schemas/TodoDescription"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TodoStatus"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/TodoPriority"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "tags": {
+            "$ref": "#/components/schemas/TodoTags"
+          },
+          "assignee": {
+            "type": "string"
+          }
+        }
+      },
+      "TodoUpdate": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/TodoTitle"
+          },
+          "description": {
+            "$ref": "#/components/schemas/TodoDescription"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TodoStatus"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/TodoPriority"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "tags": {
+            "$ref": "#/components/schemas/TodoTags"
+          },
+          "assignee": {
+            "type": "string"
+          }
+        }
+      },
+      "ProvisioningNotification": {
+        "description": "Callback notification from the request broker when storage provisioning completes or fails. Discriminated by entityType and status constants to enable type-safe Match dispatch.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/UserStorageProvisioned"
+          },
+          {
+            "$ref": "#/components/schemas/OrganizationStorageProvisioned"
+          },
+          {
+            "$ref": "#/components/schemas/OrganizationMemberStorageProvisioned"
+          },
+          {
+            "$ref": "#/components/schemas/StorageProvisioningFailed"
+          }
+        ]
+      },
+      "UserStorageProvisioned": {
+        "title": "User Storage Provisioned",
+        "description": "Notification that a user's personal todo-list blob storage has been provisioned and is ready for initialization.",
+        "type": "object",
+        "required": [
+          "entityId",
+          "entityType",
+          "status",
+          "sasToken",
+          "payload"
+        ],
+        "properties": {
+          "entityId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier of the newly provisioned user"
+          },
+          "entityType": {
+            "const": "user"
+          },
+          "status": {
+            "const": "provisioned"
+          },
+          "sasToken": {
+            "type": "string",
+            "description": "SAS token granting write access to the user's newly provisioned blob storage"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/NewUser",
+            "description": "The original user creation request, echoed back so the stateless API can populate storage"
+          }
+        }
+      },
+      "OrganizationStorageProvisioned": {
+        "title": "Organization Storage Provisioned",
+        "description": "Notification that an organization's blob storage has been provisioned and is ready for initialization.",
+        "type": "object",
+        "required": [
+          "entityId",
+          "entityType",
+          "status",
+          "sasToken",
+          "payload"
+        ],
+        "properties": {
+          "entityId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier of the newly provisioned organization"
+          },
+          "entityType": {
+            "const": "organization"
+          },
+          "status": {
+            "const": "provisioned"
+          },
+          "sasToken": {
+            "type": "string",
+            "description": "SAS token granting write access to the organization's newly provisioned blob storage"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/NewOrganization",
+            "description": "The original organization creation request, echoed back so the stateless API can populate storage"
+          }
+        }
+      },
+      "OrganizationMemberStorageProvisioned": {
+        "title": "Organization Member Storage Provisioned",
+        "description": "Notification that an organization member's blob storage has been provisioned and is ready for initialization.",
+        "type": "object",
+        "required": [
+          "entityId",
+          "orgId",
+          "entityType",
+          "status",
+          "sasToken",
+          "payload"
+        ],
+        "properties": {
+          "entityId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier of the user who is the member"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier of the organization"
+          },
+          "entityType": {
+            "const": "organization-member"
+          },
+          "status": {
+            "const": "provisioned"
+          },
+          "sasToken": {
+            "type": "string",
+            "description": "SAS token granting write access to the member's newly provisioned blob storage within the organization"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/AddMemberRequest",
+            "description": "The original add member request, echoed back"
+          }
+        }
+      },
+      "StorageProvisioningFailed": {
+        "title": "Storage Provisioning Failed",
+        "description": "Notification that storage provisioning for an entity failed. The API simply acknowledges â€” no storage to initialize.",
+        "type": "object",
+        "required": [
+          "entityId",
+          "entityType",
+          "status"
+        ],
+        "properties": {
+          "entityId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier of the entity whose provisioning failed"
+          },
+          "entityType": {
+            "type": "string",
+            "enum": [
+              "user",
+              "organization",
+              "organization-member"
+            ],
+            "description": "The kind of entity whose provisioning failed"
+          },
+          "status": {
+            "const": "failed"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable description of what went wrong"
+          }
+        }
+      },
+      "NewUser": {
+        "type": "object",
+        "required": [
+          "displayName"
+        ],
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Human-readable display name for the user"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Optional email address for the user"
+          }
+        }
+      },
+      "NewOrganization": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Display name for the organization"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Optional description of the organization's purpose"
+          }
+        }
+      },
+      "AddMemberRequest": {
+        "type": "object",
+        "required": [
+          "userId"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "member",
+              "admin"
+            ],
+            "default": "member"
+          }
+        }
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri",
+            "description": "A URI reference that identifies the problem type"
+          },
+          "title": {
+            "type": "string",
+            "description": "A short human-readable summary of the problem type"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The HTTP status code"
+          },
+          "detail": {
+            "type": "string",
+            "description": "A human-readable explanation specific to this occurrence"
+          },
+          "instance": {
+            "type": "string",
+            "format": "uri",
+            "description": "A URI reference that identifies the specific occurrence"
+          }
+        },
+        "required": [
+          "type",
+          "status"
+        ]
+      }
+    },
+    "securitySchemes": {
+      "sasToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Storage-Sas-Token",
+        "description": "SAS token for accessing the relevant blob storage"
+      },
+      "identitySubject": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Identity-Subject",
+        "description": "JWT subject (sub) for the authenticated identity"
+      }
+    }
+  }
+}

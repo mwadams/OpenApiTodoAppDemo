@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>preview</LangVersion>
+    <CorvusTextJsonDefaultAccessibility>Internal</CorvusTextJsonDefaultAccessibility>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Azure.Storage.Blobs" Version="9.*" />
+    <PackageReference Include="Corvus.Text.Json" Version="5.1.4" />
+    <PackageReference Include="Corvus.Text.Json.OpenApi" Version="5.1.4" />
+    <PackageReference Include="Corvus.Text.Json.OpenApi.HttpTransport" Version="5.1.4" />
+    <PackageReference Include="Corvus.Text.Json.SourceGenerator" Version="5.1.4" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="Schemas\**\*.json" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://todo-app.example.com/schemas/registry.json",
+  "title": "Todo App Container Registry Schema",
+  "description": "Defines the internal storage format for the broker's container registry. The registry tracks all provisioned blob containers and their lifecycle status. It is infrastructure-only: no domain data (user profiles, org names, memberships) lives here.",
+  "$defs": {
+    "Registry": {
+      "title": "Registry",
+      "description": "The root registry document stored as a single blob. Contains the inventory of all provisioned containers. Concurrency is managed via blob ETags.",
+      "type": "object",
+      "required": ["containers"],
+      "properties": {
+        "containers": {
+          "description": "All provisioned blob containers in the system.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/Container" }
+        }
+      }
+    },
+    "Container": {
+      "title": "Container",
+      "description": "A provisioned blob container. The container name is derived deterministically from the entity identity (e.g. user-{hash} for personal storage, om-{hash}-{hash} for org-member storage).",
+      "type": "object",
+      "required": ["name", "entityType", "entityId", "status"],
+      "properties": {
+        "name": {
+          "description": "The physical Azure Blob container name (lowercase, 3-63 chars).",
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 63
+        },
+        "entityType": {
+          "description": "What kind of entity this container belongs to.",
+          "$ref": "#/$defs/EntityType"
+        },
+        "entityId": {
+          "description": "The identity subject (sub) that owns this container.",
+          "type": "string",
+          "minLength": 1
+        },
+        "orgId": {
+          "description": "For organization-member containers, the organization ID.",
+          "type": "string"
+        },
+        "status": {
+          "description": "Current provisioning status of this container.",
+          "$ref": "#/$defs/ContainerStatus"
+        }
+      }
+    },
+    "EntityType": {
+      "title": "Entity Type",
+      "description": "The kind of entity a container stores data for.",
+      "type": "string",
+      "enum": ["user", "organization", "organization-member"]
+    },
+    "ContainerStatus": {
+      "title": "Container Status",
+      "description": "Lifecycle status of a container. Starts as 'provisioning' while being created, becomes 'active' once ready, or 'failed' if provisioning could not complete.",
+      "type": "string",
+      "enum": ["provisioning", "active", "failed"]
+    }
+  }
+}
