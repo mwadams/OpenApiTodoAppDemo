@@ -28,6 +28,10 @@ async function api(method, path, body) {
         const error = new Error(detail || friendlyError(type, res.status));
         error.status = res.status;
         error.type = type;
+        if (res.status === 401 && path !== '/auth/login') {
+            await clearSessionCookie();
+            showLogin();
+        }
         throw error;
     }
     if (res.status === 204) return null;
@@ -62,19 +66,52 @@ function toast(msg, type = 'info') {
 }
 
 // Session management
+let sessionCheckVersion = 0;
+
 async function checkSession() {
+    const checkVersion = ++sessionCheckVersion;
     try {
-        const res = await fetch('/auth/me', { credentials: 'same-origin' });
-        if (!res.ok) { showLogin(); return; }
+        const res = await fetch('/auth/me', { credentials: 'same-origin', cache: 'no-store' });
+        if (!res.ok) {
+            if (res.status === 401) {
+                await clearSessionCookie();
+            }
+            if (checkVersion === sessionCheckVersion) {
+                showLogin();
+            }
+            return;
+        }
+
         const authUser = await res.json();
         if (authUser && authUser.sub) {
             await loadProfile();
-            showApp();
+            if (checkVersion === sessionCheckVersion) {
+                showApp();
+            }
         } else {
+            if (checkVersion === sessionCheckVersion) {
+                showLogin();
+            }
+        }
+    } catch (e) {
+        if (e.status === 401) {
+            await clearSessionCookie();
+        }
+        if (checkVersion === sessionCheckVersion) {
             showLogin();
         }
+    }
+}
+
+async function clearSessionCookie() {
+    try {
+        await fetch('/auth/logout', {
+            method: 'POST',
+            credentials: 'same-origin',
+            cache: 'no-store',
+        });
     } catch {
-        showLogin();
+        // If the broker is unavailable, resetting local UI state is still correct.
     }
 }
 
@@ -107,10 +144,19 @@ function showLogin() {
     state.activeContext = null;
     document.getElementById('login-screen').classList.remove('hidden');
     document.getElementById('app-screen').classList.add('hidden');
+    document.getElementById('user-display-name').textContent = '';
+    document.getElementById('user-todo-entry').innerHTML = '';
+    document.getElementById('org-list').innerHTML = '';
+    document.getElementById('todo-list').innerHTML = '';
+    document.getElementById('members-list').innerHTML = '';
+    document.getElementById('members-section').classList.add('hidden');
+    document.getElementById('todo-panel').classList.add('hidden');
+    document.getElementById('welcome').classList.remove('hidden');
     // Clear forms and error messages
     document.getElementById('form-login')?.reset();
     document.getElementById('form-register')?.reset();
     document.getElementById('login-error')?.classList.add('hidden');
+    document.getElementById('register-error')?.classList.add('hidden');
 }
 
 function showApp() {
@@ -162,9 +208,7 @@ async function doLogin(email, password) {
 }
 
 async function doLogout() {
-    try {
-        await api('POST', '/auth/logout');
-    } catch { /* ignore */ }
+    await clearSessionCookie();
     showLogin();
 }
 
@@ -642,6 +686,23 @@ function esc(str) {
     el.textContent = str || '';
     return el.innerHTML;
 }
+
+function shouldRevalidateVisibleApp() {
+    return state.user !== null ||
+        !document.getElementById('app-screen').classList.contains('hidden');
+}
+
+window.addEventListener('pageshow', e => {
+    if (e.persisted || shouldRevalidateVisibleApp()) {
+        checkSession();
+    }
+});
+
+window.addEventListener('focus', () => {
+    if (shouldRevalidateVisibleApp()) {
+        checkSession();
+    }
+});
 
 // Init
 checkSession();
