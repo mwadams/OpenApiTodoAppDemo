@@ -16,13 +16,19 @@ async function api(method, path, body) {
     if (!res.ok) {
         const text = await res.text();
         let detail;
+        let type;
         try {
             const json = JSON.parse(text);
+            type = json.type;
             detail = json.detail || json.title || json.error || friendlyError(json.type, res.status);
         } catch {
             detail = text;
         }
-        throw new Error(detail || `HTTP ${res.status}`);
+
+        const error = new Error(detail || friendlyError(type, res.status));
+        error.status = res.status;
+        error.type = type;
+        throw error;
     }
     if (res.status === 204) return null;
     const contentType = res.headers.get('content-type') || '';
@@ -31,9 +37,14 @@ async function api(method, path, body) {
 }
 
 function friendlyError(type, status) {
+    if (type === 'urn:todo-app:registration-failed' && status === 409) {
+        return 'An account with that email already exists. If you already registered, switch to Sign In.';
+    }
+
     const messages = {
         'urn:todo-app:invalid-credentials': 'Invalid email or password',
         'urn:todo-app:email-in-use': 'An account with that email already exists',
+        'urn:todo-app:registration-failed': 'Registration failed. Please check your details and try again.',
         'urn:todo-app:not-authenticated': 'You must be signed in',
         'urn:todo-app:forbidden': 'You do not have permission to do this',
         'urn:todo-app:not-found': 'Not found',
@@ -155,6 +166,28 @@ async function doLogout() {
         await api('POST', '/auth/logout');
     } catch { /* ignore */ }
     showLogin();
+}
+
+async function withSubmitLock(form, busyText, action) {
+    if (form.dataset.submitting === 'true') return;
+
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalText = submitButton?.textContent;
+    form.dataset.submitting = 'true';
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = busyText;
+    }
+
+    try {
+        await action();
+    } finally {
+        delete form.dataset.submitting;
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = originalText;
+        }
+    }
 }
 
 // Sidebar rendering
@@ -574,24 +607,30 @@ document.getElementById('dlg-add-member').addEventListener('close', function () 
 // Login form
 document.getElementById('form-login')?.addEventListener('submit', async function (e) {
     e.preventDefault();
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
-    if (email && password) {
-        await doLogin(email, password);
-        if (state.user) this.reset();
-    }
+    const form = this;
+    await withSubmitLock(form, 'Signing in...', async () => {
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+        if (email && password) {
+            await doLogin(email, password);
+            if (state.user) form.reset();
+        }
+    });
 });
 
 // Register form
 document.getElementById('form-register')?.addEventListener('submit', async function (e) {
     e.preventDefault();
-    const displayName = document.getElementById('reg-name').value.trim();
-    const email = document.getElementById('reg-email').value.trim();
-    const password = document.getElementById('reg-password').value;
-    if (displayName && email && password) {
-        await doRegister(email, password, displayName);
-        if (state.user) this.reset();
-    }
+    const form = this;
+    await withSubmitLock(form, 'Creating account...', async () => {
+        const displayName = document.getElementById('reg-name').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
+        const password = document.getElementById('reg-password').value;
+        if (displayName && email && password) {
+            await doRegister(email, password, displayName);
+            if (state.user) form.reset();
+        }
+    });
 });
 
 // Logout button
